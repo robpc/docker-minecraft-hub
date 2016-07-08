@@ -1,29 +1,38 @@
 server:
     image: itzg/minecraft-server
+    cpu_shares: 480
+    mem_limit: 1073741824
     ports:
         - "25565:25565"
     volumes:
-        - "/data"
+        - "/ecs-data/minecraft:/data"
+        # - "/data"
     environment:
         EULA: "TRUE"
-        # OPS: "jim,bob"
-        # WHITELIST: 'bob'
+        OPS: "user"
+        WHITELIST: 'user'
 
 mapgen:
+    cpu_shares: 300
+    mem_limit: 536870912
     image: quay.io/rpcann/minecraft-overviewer
     volumes_from:
-        - "server:ro"
+        - "server"
     volumes:
-        - "/home/minecraft/render"
+        - "/ecs-data/minecraft-web:/home/minecraft/render"
+        # - "/home/minecraft/render"
     environment:
         MINECRAFT_WORLD_DIR: "/data/world"
-        INTERVAL: 60
+        INTERVAL: 120
+        GOOGLE_API_KEY: key
 
 web:
+    cpu_shares: 100
+    mem_limit: 134217728
     image: quay.io/rpcann/minecraft-hub-web
     ports:
         - "80:80"
     volumes_from:
-        - "mapgen:ro"
+        - "mapgen"
     environment:
         MAP_DIR: /home/minecraft/render/
