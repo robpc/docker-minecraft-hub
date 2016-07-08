@@ -1,0 +1,29 @@
+server:
+    image: itzg/minecraft-server
+    ports:
+        - "25565:25565"
+    volumes:
+        - "/data"
+    environment:
+        EULA: "TRUE"
+        # OPS: "jim,bob"
+        # WHITELIST: 'bob'
+
+mapgen:
+    image: quay.io/rpcann/minecraft-overviewer
+    volumes_from:
+        - "server:ro"
+    volumes:
+        - "/home/minecraft/render"
+    environment:
+        MINECRAFT_WORLD_DIR: "/data/world"
+        INTERVAL: 60
+
+web:
+    image: quay.io/rpcann/minecraft-hub-web
+    ports:
+        - "80:80"
+    volumes_from:
+        - "mapgen:ro"
+    environment:
+        MAP_DIR: /home/minecraft/render/
