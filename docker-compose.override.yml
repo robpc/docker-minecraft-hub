@@ -1,0 +1,17 @@
+##############################################
+# docker-compose.override.yml
+# 
+# Contains overrides to the AWS version for
+# local development.
+#############################################
+version: '2'
+services:
+    server:
+        logging: 
+            driver: json-file
+    mapgen:
+        logging: 
+            driver: json-file
+    web:
+        logging: 
+            driver: json-file

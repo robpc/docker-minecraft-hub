@@ -1,32 +1,71 @@
-server:
-    image: itzg/minecraft-server
-    cpu_shares: 480
-    mem_limit: 1073741824
-    ports:
-        - "25565:25565"
-    environment:
-        EULA: "TRUE"
-        #OPS: "user"
-        #WHITELIST: 'user'
+##############################################
+# docker-compose.yml
+# 
+# Minecraft Hub
+#############################################
+version: '2'
+services:
+    server:
+        image: itzg/minecraft-server
+        cpu_shares: 480
+        mem_limit: 1073741824
+        ports:
+            - "25565:25565"
+        volumes:
+            - "world:/data"
+        environment:
+            - EULA="TRUE"
+            # OPS: ${OPS}
+            # WHITELIST: ${WHITELIST}
+        env_file:
+            - config.env
+        logging: 
+            driver: awslogs
+            options:
+                awslogs-region: ${AWS_REGION}
+                awslogs-group: ${AWS_GROUP}
+                # awslogs-stream: "server"
 
-mapgen:
-    cpu_shares: 300
-    mem_limit: 536870912
-    image: quay.io/rpcann/minecraft-overviewer
-    volumes_from:
-        - "server"
-    environment:
-        MINECRAFT_WORLD_DIR: "/data/world"
-        INTERVAL: 120
-        GOOGLE_API_KEY: key
+    mapgen:
+        image: quay.io/rpcann/minecraft-overviewer
+        cpu_shares: 300
+        mem_limit: 536870912
+        volumes:
+            - "world:/data"
+            - "map:/home/minecraft/render"
+        environment:
+            - MINECRAFT_WORLD_DIR=/data/world
+            # MAPGEN_INTERVAL: 120
+            # GOOGLE_API_KEY: key
+        env_file:
+            - config.env
+        logging: 
+            driver: awslogs
+            options:
+                awslogs-region: ${AWS_REGION}
+                awslogs-group: ${AWS_GROUP}
+                # awslogs-stream: "mapgen"
 
-web:
-    cpu_shares: 100
-    mem_limit: 134217728
-    image: quay.io/rpcann/minecraft-hub-web
-    ports:
-        - "80:80"
-    volumes_from:
-        - "mapgen"
-    environment:
-        MAP_DIR: /home/minecraft/render/
+    web:
+        image: quay.io/rpcann/minecraft-hub-web
+        cpu_shares: 100
+        mem_limit: 134217728
+        ports:
+            - "80:80"
+        volumes:
+            - "map:/home/minecraft/render/"
+        environment:
+            - MAP_DIR=/home/minecraft/render/
+        env_file:
+            - config.env
+        logging: 
+            driver: awslogs
+            options:
+                awslogs-region: ${AWS_REGION}
+                awslogs-group: ${AWS_GROUP}
+                # awslogs-stream: "web"
+volumes:
+    world:
+        driver: local
+    map:
+        driver: local
