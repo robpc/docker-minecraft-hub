@@ -4,13 +4,10 @@ server:
     mem_limit: 1073741824
     ports:
         - "25565:25565"
-    volumes:
-        - "/ecs-data/minecraft:/data"
-        # - "/data"
     environment:
         EULA: "TRUE"
-        OPS: "user"
-        WHITELIST: 'user'
+        #OPS: "user"
+        #WHITELIST: 'user'
 
 mapgen:
     cpu_shares: 300
@@ -18,9 +15,6 @@ mapgen:
     image: quay.io/rpcann/minecraft-overviewer
     volumes_from:
         - "server"
-    volumes:
-        - "/ecs-data/minecraft-web:/home/minecraft/render"
-        # - "/home/minecraft/render"
     environment:
         MINECRAFT_WORLD_DIR: "/data/world"
         INTERVAL: 120
