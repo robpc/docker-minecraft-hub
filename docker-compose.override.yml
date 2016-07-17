@@ -9,6 +9,13 @@ services:
     server:
         logging: 
             driver: json-file
+    snapshot:
+        volumes:
+            - "~/.aws:/root/.aws"
+        environment:
+            - SNAPSHOT_INTERVAL=30
+        logging: 
+            driver: json-file
     mapgen:
         logging: 
             driver: json-file

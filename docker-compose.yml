@@ -11,10 +11,8 @@ services:
         mem_limit: 1073741824
         ports:
             - "25565:25565"
-        volumes:
-            - "world:/data"
         environment:
-            - EULA="TRUE"
+            - EULA=TRUE
             # OPS: ${OPS}
             # WHITELIST: ${WHITELIST}
         env_file:
@@ -25,14 +23,36 @@ services:
                 awslogs-region: ${AWS_REGION}
                 awslogs-group: ${AWS_GROUP}
                 # awslogs-stream: "server"
+    snapshot:
+        image: quay.io/rpcann/snapshots
+        cpu_shares: 100
+        mem_limit: 134217728
+        volumes_from:
+            - server
+        environment:
+            - SNAPSHOT_NAME=minecraft-backup
+            - SNAPSHOT_TIMESTAMP_FORMAT=%Y%m%d-%H%M%S
+            - SNAPSHOT_INTERVAL=3600
+            - SNAPSHOT_MAX_NUM=3
+            - SNAPSHOT_LOCATION=/data
+            # - SNAPSHOT_DESTINATION=s3://backup
+            - SNAPSHOT_METHOD=s3         
+            - SNAPSHOT_COMPRESSION=zip
+        env_file:
+            - config.env
+        logging: 
+            driver: awslogs
+            options:
+                awslogs-region: ${AWS_REGION}
+                awslogs-group: ${AWS_GROUP}
+                # awslogs-stream: "snapshot"
 
     mapgen:
         image: quay.io/rpcann/minecraft-overviewer
         cpu_shares: 300
         mem_limit: 536870912
-        volumes:
-            - "world:/data"
-            - "map:/home/minecraft/render"
+        volumes_from:
+            - server
         environment:
             - MINECRAFT_WORLD_DIR=/data/world
             # MAPGEN_INTERVAL: 120
@@ -52,8 +72,8 @@ services:
         mem_limit: 134217728
         ports:
             - "80:80"
-        volumes:
-            - "map:/home/minecraft/render/"
+        volumes_from:
+            - mapgen
         environment:
             - MAP_DIR=/home/minecraft/render/
         env_file:
@@ -64,8 +84,3 @@ services:
                 awslogs-region: ${AWS_REGION}
                 awslogs-group: ${AWS_GROUP}
                 # awslogs-stream: "web"
-volumes:
-    world:
-        driver: local
-    map:
-        driver: local
