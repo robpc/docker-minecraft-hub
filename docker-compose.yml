@@ -13,20 +13,17 @@ services:
             - "25565:25565"
         environment:
             - EULA=TRUE
+            - VERSION=1.12
             # OPS: ${OPS}
             # WHITELIST: ${WHITELIST}
         env_file:
             - config.env
-        logging: 
-            driver: awslogs
-            options:
-                awslogs-region: ${AWS_REGION}
-                awslogs-group: ${AWS_GROUP}
-                # awslogs-stream: "server"
     snapshot:
         image: quay.io/rpcann/snapshots
         cpu_shares: 100
         mem_limit: 134217728
+        volumes:
+            - ./backup:/backup
         volumes_from:
             - server
         environment:
@@ -35,18 +32,11 @@ services:
             - SNAPSHOT_INTERVAL=3600
             - SNAPSHOT_MAX_NUM=3
             - SNAPSHOT_LOCATION=/data
-            # - SNAPSHOT_DESTINATION=s3://backup
-            - SNAPSHOT_METHOD=s3         
+            - SNAPSHOT_DESTINATION=/backup
+            - SNAPSHOT_METHOD=local         
             - SNAPSHOT_COMPRESSION=zip
         env_file:
             - config.env
-        logging: 
-            driver: awslogs
-            options:
-                awslogs-region: ${AWS_REGION}
-                awslogs-group: ${AWS_GROUP}
-                # awslogs-stream: "snapshot"
-
     mapgen:
         image: quay.io/rpcann/minecraft-overviewer
         cpu_shares: 300
@@ -54,18 +44,12 @@ services:
         volumes_from:
             - server
         environment:
+            - MINECRAFT_VERSION=1.12
             - MINECRAFT_WORLD_DIR=/data/world
-            # MAPGEN_INTERVAL: 120
+            - MAPGEN_INTERVAL=120
             # GOOGLE_API_KEY: key
         env_file:
             - config.env
-        logging: 
-            driver: awslogs
-            options:
-                awslogs-region: ${AWS_REGION}
-                awslogs-group: ${AWS_GROUP}
-                # awslogs-stream: "mapgen"
-
     web:
         image: quay.io/rpcann/minecraft-hub-web
         cpu_shares: 100
@@ -75,12 +59,6 @@ services:
         volumes_from:
             - mapgen
         environment:
-            - MAP_DIR=/home/minecraft/render/
+            - MAP_DIR=/home/minecraft-overviewer/render/
         env_file:
             - config.env
-        logging: 
-            driver: awslogs
-            options:
-                awslogs-region: ${AWS_REGION}
-                awslogs-group: ${AWS_GROUP}
-                # awslogs-stream: "web"
