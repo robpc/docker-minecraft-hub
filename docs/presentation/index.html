@@ -1,0 +1,491 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Docker Workshop - reveal.js</title>
+
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/black.css">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <style>
+      #docker-logo {
+        width: 30%;
+        background: rgba(255, 255, 255, 0.90);
+        border: 0;
+      }
+      #minecraft-logo {
+        width: 60%;
+        background: rgba(255, 255, 255, 0.0); 
+        border: 0;
+      }
+      #google-docker-minecraft {
+        width: 50%;
+        border: 0;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div class="reveal">
+      <div class="slides">
+
+        <section>
+          <h2>Intro to Docker Workshop</h2>
+          <p>Rob Cannon</p>
+          <p><small>
+            <i class="fa fa-github"></i> robpc<br/>
+            <i class="fa fa-twitter"></i> robtng<br/>
+            <i class="fa fa-instagram"></i> rpcannon
+          </small></p>
+        </section>
+
+        <section>
+          <h3>What is docker?</h3>
+          <blockquote>
+              "Docker is the world’s leading software container platform."<br/>
+              - <a href="https://www.docker.com/what-docker">docker.com</a>
+          </blockquote>
+          <img id="docker-logo" src="images/docker.png"/>
+
+          <aside class="notes">
+            <p>
+              A container image is a stand-alone package that includes everything needed 
+              to run an application.
+            </p>
+          </aside>
+        </section>
+
+        <section>
+          <h3>Advantages to using docker</h3>
+          <ul>
+            <li>Isolated processes</li>
+            <li>More efficient than Virtual Machines</li>
+            <li>Consistency across platforms</li>
+          </ul>
+
+          <aside class="notes">
+            <ul>
+              <li>
+                Each container runs isolated from it's surroundings and cannot impact 
+                it's neighbors. This prevents both malicious and benign conflicts 
+                between processes.
+              </li>
+              <li>
+                Virtual Machines take a brute force approach and replicate everything down 
+                to the hardware. Containers are much more lightweight and only bundle libraries 
+                and settings required to make the software work.
+              </li>
+              <li>
+                Containers guarantees that software will always run the same no matter the platform.
+              </li>
+            </ul>
+          </aside>
+        </section>
+
+        <section>
+          <h3>Inspiration</h3>
+          <p>
+            <a href="http://crosbymichael.com/advanced-docker-volumes.html">Advanced Docker Volumes</a>
+             - Michael Crosby
+          </p>
+          <div class="fragment">
+            <ul>
+              <li>Explains using volumes with multiple containers</li>
+              <li>Demonstrates one proccess per container</li>
+              <li>Uses a "real world" example with Minecraft</li>
+            </ul>
+          </div>
+          <p class="fragment"><i>But, newer features in docker make it feel a bit dated.</i></p>
+
+          <aside class="notes">
+            <p>
+              Back in 2013, when I was starting to learn docker, I came across this article by Michael Crosby, who is
+              the chief maintainer of the open-source docker community.</p>
+            <code>NEXT</code>
+            <p>
+              The article was one of the first to describe how multiple containers could be coordinated through 
+              the use of volumes. Even though the containers are deeply intertwined, it shows the one process 
+              per container paradigm really well. I also really like that it uses a relatable example, something
+              that one might use in real life instead of an over simplified app.
+            </p>
+            <code>NEXT</code>
+            <p>
+              Unfotunately, a lot has changed since 2013, and it doesn't make use of a lot of the newer features
+              of docker.
+            </p>
+          </aside>
+        </section>
+
+        <section>
+          <img id="minecraft-logo" src="images/minecraft.png"/>
+          <h3>Minecraft Hub Project</h3>
+          <ul>
+            <li>Minecraft Server</li>
+            <li>Backup data</li>
+            <li>Generate a map</li>
+            <li>Web server</li>
+          </ul> 
+
+          <aside class="notes">
+            <p>
+              For this workshop we are going to implement a more modern version of that original example, with a
+              couple extra features. Here is a overview of what we will be making in this workshop.
+            </p>
+          </aside>
+        </section>
+
+        <section>
+          <h3>Step 0: Install and Setup</h3>
+          <p>Install docker from <a href="docker.com">docker.com</a></p>
+          <p>Open terminal and create directory</p>
+          <pre><code class="nohighlight" data-trim>
+            $ mkdir -p docker-workshop/minecraft-hub
+            $ cd docker-workshop/minecraft-hub
+          </code></pre>
+
+          <aside class="notes">
+            <p>Before we do anything we'll need to install docker if you don't already 
+              have it. You can get it by going to docker.com and clicking on the "Get Docker" 
+              in the nav menu. Once that's done you should create a directory for this workshop
+              and also create a directory inside that for our central project. 
+            </p>
+          </aside>
+        </section>
+
+        <section>
+          <h3>Workshop Cheatsheet</h3>
+          <p>[links to materials (github)]</p>
+        </section>
+
+        <section>
+          <h3>Step 1: Running an application in docker</h3>
+          <p><i>First Rule of Docker</i>: Has someone done it already?</p>
+          <div class="fragment">
+            <p>(Probably)</p>
+            <img id="google-docker-minecraft" src="images/google-docker-minecraft.png"/>
+          </div>
+          <pre class="fragment"><code class="nohighlight" data-trim>
+            $ docker run -e EULA=TRUE -e VERSION=1.12 -p 25565:25565 \
+                -t itzg/minecraft-server 
+          </code></pre>
+          <aside class="notes">
+            <p>
+              The first thing we are going to want to do is run the Minecraft server. Now we could
+              start straight away by writing our own Dockerfile, but I prefer seeing what projects
+              have already been created to solve this problem.
+            </p>
+            <code>next</code>
+            <p>
+              Chances are someone have already done the work. There are many places you can look
+              for one, but I usually just use Google. The first one I found looks good so that's 
+              the one we are going to use.
+            </p>
+            <code>next</code>
+            <p>
+              Use this command to run the docker container using the image we just picked.
+            </p>
+          </aside>
+        </section>
+
+        <section>
+          <section>
+            <img style="max-width: 65%" src="images/step_1_console.png"/>
+          </section>
+          <section>
+            <img style="max-width: 95%" src="images/step_1_game.png"/>
+          </section>
+        </section>
+
+        <section>
+          <h3>Managing running containers</h3>
+          
+          <p>list</p>
+          <pre><code data-trim>
+            $ docker ps
+            CONTAINER ID   IMAGE                   COMMAND    CREATED          STATUS                    PORTS                                 NAMES
+            82d8695c6efa   itzg/minecraft-server   "/start"   17 minutes ago   Up 17 minutes (healthy)   0.0.0.0:25565->25565/tcp, 25575/tcp   modest_hermann
+          </code></pre>
+
+          <p>stop</p>
+          <pre><code data-trim>
+            $ docker stop 82d8695c6efa
+            82d8695c6efa
+          </code></pre>
+
+          <p>delete</p>
+          <pre><code data-trim>
+            $ docker rm 82d8695c6efa
+            82d8695c6efa
+          </code></pre>
+
+          <aside class="notes">
+            <p>
+              Using the <code>docker ps</code> command we can see all the running 
+              containers. <code>docker stop</code> can be used to stop any of the
+              containers that are still running. Note that even though we did 
+              <code>Ctrl-C</code> the process is still running. Likewise we can 
+              delete the container when we are done with it. Let's stop and 
+              delete the container running the server.
+            </p>
+          </aside>
+        </section>
+
+        <section>
+          <h3>docker-compose</h3>
+          <p>Use configuration files to manage docker containers</p>
+          <div  class="fragment">
+            <p>All the previous commands are also available with docker-compose</p>
+            <pre><code data-trim>
+              $ docker-compose run 
+              $ docker-compose stop
+              $ docker-compose rm
+            </code></pre>
+            <p>Container settings are stored in a yaml file</p>
+          </div>
+
+          <aside class="notes">
+            <p>
+              Running the docker commands works fine, but docker-compose allows us to 
+              save our configuration and simplifies running more complicated setups.</p>
+            </p>
+            <code>next</code>
+            <p>
+              We can use all the same commands with docker compose. In fact, even when 
+              prototyping I personally find it easier to start with docker-compose and 
+              don't bother with the docker cli. Let's take another look at our first 
+              step this time using docker-compose.
+            </p>
+          </aside>
+        </section>
+
+        <section>
+          <h3>Step 2: Again with docker-compose</h3>
+          <p>Add this to <code>docker-compose.yml</code></p>
+          <pre><code data-trim>
+            version: '2'
+            services:
+              server:
+                image: itzg/minecraft-server
+                ports:
+                  - "25565:25565"
+                environment:
+                  - EULA=TRUE
+                  - VERSION=1.12
+          </code></pre>
+          <pre><code data-trim>
+            $ docker-compose up
+          </code></pre>
+        </section>
+
+        <section>
+          <h3>Environment Variables</h3>
+          <p>How they can make your build env agnostic</p>
+        </section>
+        
+        <section>
+          <h3>Step 3: Adding the backup process</h3>
+          <p>Create a <code>/snapshots</code></p>
+          <p>Download <code>entrypoint.sh</code></p>
+        </section>
+
+        <section>
+          <h3>Create <code>Dockerfile</code></h3>
+          <pre><code data-trim>
+            FROM debian:jessie
+
+            RUN apt-get update -y && \
+                apt-get install -y \
+                    vim python python-pip groff zip
+
+            RUN pip install awscli
+
+            RUN mkdir /home/snapshots
+            RUN mkdir /home/snapshots/backups
+
+            WORKDIR /home/snapshots/backups
+
+            COPY entrypoint.sh /home/snapshots
+
+            ENTRYPOINT bash /home/snapshots/entrypoint.sh
+          </code></pre>
+          <pre><code data-trim>
+            $ docker build -t snapshots .
+          </code></pre>
+        </section>
+
+        <section>
+          <h3>Let's talk about images versus containers</h3>
+          <pre><code data-trim>
+            $ docker images
+          </code></pre>
+        </section>
+
+        <section>
+          <h3>Let's add <code>snapshots</code> to the main project</h3>
+          <pre><code data-trim>
+            version: '2'
+            services:
+              server:
+                # ... 
+              snapshot:
+                  build: ../snaphosts
+                  cpu_shares: 100
+                  mem_limit: 134217728
+                  volumes:
+                      - ./backup:/backup
+                  volumes_from:
+                      - server
+                  environment:
+                      - SNAPSHOT_NAME=minecraft-backup
+                      - SNAPSHOT_TIMESTAMP_FORMAT=%Y%m%d-%H%M%S
+                      - SNAPSHOT_INTERVAL=3600
+                      - SNAPSHOT_MAX_NUM=3
+                      - SNAPSHOT_LOCATION=/data
+                      - SNAPSHOT_DESTINATION=/backup
+                      - SNAPSHOT_METHOD=local         
+                      - SNAPSHOT_COMPRESSION=zip
+          </code></pre>
+        </section>
+
+        <section>
+          <h3>Why you should (almost) never use the docker cli again</h3>
+        </section>
+
+        <section>
+          <h3>Why is it in a separate container?</h3>
+          <p>One process per container paradigm</p>
+        </section>
+
+        <section>
+          <h3>volumes</h3>
+        </section>
+
+        <section>
+          <h3>volumes_from</h3>
+        </section>
+
+        <section>
+          <h3>Advanced: <code>docker-compose</code> config for development</h3>
+        </section>
+
+        <!-- (?) Worth talking about docker-compose v2 volumes? -->
+
+        <section>
+          <h3>Step 4: Adding the map generator</h3>
+          <p>Follow up to the First Rule</p>
+          <p>Probably, but that doesn't mean it can't be better</p>
+        </section>
+
+        <section>
+          <h3>Let's add <code>mapgen</code> to the project</h3>
+          <pre><code data-trim>
+            version: '2'
+            services:
+              server:
+                # ... 
+              snapshot:
+                # ...
+              mapgen:
+                  build: ../minecraft-overviewer
+                  volumes_from:
+                      - server
+                  environment:
+                      - MINECRAFT_VERSION=1.12
+                      - MINECRAFT_WORLD_DIR=/data/world
+                      - MAPGEN_INTERVAL=120
+          </code></pre>
+        </section>
+
+        <section>
+          <h3>Advanced: Keeping sensitive information out of your build</h3>
+          <p>env_file</p>
+          <p>Downloading from s3</p>
+        </section>
+
+        <section>
+          <h3>Container Fight: Battle of the CPU - How about resources?</h3>
+          <p>docker stats</p>
+          <p>cpu_shares/mem_limit</p>
+        </section>
+
+        <section>
+          <h3>Step 5: Adding the web server</h3>
+          <pre><code data-trim>
+            version: '2'
+            services:
+              server:
+                # ... 
+              snapshot:
+                # ...
+              mapgen:
+                # ..
+              web:
+                build: ../minecraft-hub-web
+                ports:
+                    - "80:80"
+                volumes_from:
+                    - mapgen
+                environment:
+                    - MAP_DIR=/home/minecraft-overviewer/render/
+          </code></pre>
+        </section>
+
+        <section>
+          <h3>A word about using standard out for logging</h3>
+        </section>
+
+        <section>
+          <h3>Separating Frontend and Backend Development</h3>
+        </section>
+
+        <section>
+          <h3>Where can we go from here?</h3>
+          <section>
+            <p>Uploading to a repository</p>
+          </section>
+          <section>
+            <p>docker-compose in github</p>
+          </section>
+        </section>
+
+        <section>
+          <h3>Full Project in Github</h3>
+        </section>
+
+      </div>
+    </div>
+
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.js"></script>
+
+    <script>
+      // More info about config & dependencies:
+      // - https://github.com/hakimel/reveal.js#configuration
+      // - https://github.com/hakimel/reveal.js#dependencies
+      Reveal.initialize({
+        dependencies: [
+          { src: 'plugin/markdown/marked.js' },
+          { src: 'plugin/markdown/markdown.js' },
+          { src: 'plugin/notes/notes.js', async: true },
+          { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+        ]
+      });
+    </script>
+  </body>
+</html>
