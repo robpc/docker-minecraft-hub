@@ -248,15 +248,14 @@
 
         <section>
           <h3>docker-compose</h3>
-          <p>Use configuration files to manage docker containers</p>
+          <p>Use YAML configuration files to manage docker containers</p>
           <div  class="fragment">
-            <p>All the previous commands are also available with docker-compose</p>
             <pre><code data-trim>
-              $ docker-compose run 
-              $ docker-compose stop
+              $ docker-compose up 
+              $ docker-compose down
               $ docker-compose rm
             </code></pre>
-            <p>Container settings are stored in a yaml file</p>
+            <p>All the previous commands are also available with docker-compose</p>
           </div>
 
           <aside class="notes">
@@ -276,7 +275,7 @@
 
         <section>
           <h3>Step 2: Again with docker-compose</h3>
-          <p>Add this to <code>docker-compose.yml</code></p>
+          <p>Create a <code>docker-compose.yml</code> in <code>minecraft-hub</code></p>
           <pre><code data-trim>
             version: '2'
             services:
@@ -291,17 +290,122 @@
           <pre><code data-trim>
             $ docker-compose up
           </code></pre>
+
+          <!-- Try this with version 3? -->
+
+          <aside class="notes">
+            <p>As you can see the settings we have here is exaclty the same as command line options
+            from before. The difference here is a little bit of extra information at the top.
+            <code>version</code> is the version of the docker-compose file format we are using.
+            Three is actually the current version, but this tutorial was made with two. Now at the 
+            command line we can start the server again, but this time we will be using the 
+            docker-compose command.</p>
+          </aside>
+        </section>
+
+        <section>
+          <img style="max-width: 65%" src="images/step_2_console.png"/>
+
+          <aside class="notes">
+            Note the line about <code>Creating minecraft_hub_server_1</code>. You'll notice that
+            when running <code>docker ps</code>, docker-compose has named this container something
+            sensible which is useful if you do need to use docker commands.
+          </aside>
         </section>
 
         <section>
           <h3>Environment Variables</h3>
-          <p>How they can make your build env agnostic</p>
+          <p>Use them to make your build agnostic to the environment</p>
+          <ul class="fragment">
+            <li>Database configuration</li>
+            <li>Setting log levels</li>
+            <li>Enabling/Disabling memcache</li>
+          </ul>
+
+          <aside class="notes">
+            <p>
+            I just want to take a second here to point out the usefulness of the environment 
+            variables. Now it's obvious that you can use them to tweak settings in the 
+            application, but I think the real power of them is removing any environment
+            specific information from your container.
+            </p>
+            <code>next</code>
+            <p>
+              Here are just a few examples.
+              <ul>
+                <li>Pointing between a production database and the development one</li>
+                <li>Enabling extra debugging when developing</li>
+                <li>Disabling the cache when running locally</li>
+              </ul>
+              These are just a few examples, but the part I wand to emphasize is that it is
+              useful to be able to setup the differences in the different environments your
+              application runs in runtime environment variables. This allows you to run the 
+              same image in all your environments. The difference between production and
+              running it locally can be just the docker-compose file that you use. Both
+              testing and debugging production become a lot easier when you know you are
+              using the same image throughout.
+            </p>
+
+          </aside>
+        </section>
+
+        <section>
+          <h3>Let's talk about images versus containers</h3>
+          <pre class="fragment"><code data-trim>
+            $ docker images
+            REPOSITORY              TAG      IMAGE ID       CREATED      SIZE
+            itzg/minecraft-server   latest   ca3942297ef6   6 days ago   293MB
+          </code></pre>
+          <pre class="fragment"><code data-trim>
+            $ docker ps -a
+            CONTAINER ID   IMAGE                   COMMAND    CREATED          STATUS                        
+            11d87def7e5b   itzg/minecraft-server   "/start"   38 minutes ago   Exited (137) 38 seconds ago  
+          </code></pre>
+
+          <aside class="notes">
+            <p>
+              So far we've talked about both containers and images, but I want to take a moment
+              to describe the differences between them.
+            </p>
+            <code>next</code>
+            <p>
+              Images are snapshots of everything needed to run an application. They are created before
+              the application ever runs. When we talk about docker's consistency, it's because the
+              application runs off of an image that is the same every time. The <code>images</code> 
+              command shows all the images stored on the local machine. In this example, we see the
+              one we used earlier to run the minecraft server. It was downloaded from the docker
+              repository using the <code>itzg/minecraft-server</code> identifier.
+            </p>
+            <code>next</code>
+            <p>
+              Containers on the other hand are runtime instances. They contain all the arguments and 
+              runtime configurations and any files changed by the running process. They use images as
+              a jumping off point, but two containers from the same image often have many differences
+              from the individual runs of the application.
+            </p>
+            <p>
+              Let's take a look at how images are created.
+            </p>
+          </aside>
         </section>
         
         <section>
           <h3>Step 3: Adding the backup process</h3>
-          <p>Create a <code>/snapshots</code></p>
-          <p>Download <code>entrypoint.sh</code></p>
+          <p>Create a <code>/docker-workshop/snapshots</code> directory</p>
+          <p>Download <code><a href="https://raw.githubusercontent.com/robpc/docker-snapshots/master/entrypoint.sh">entrypoint.sh</a></code></p>
+
+          <aside class="notes">
+            <p>
+              In addition to the server that we set up before, let's add a process to backup the server
+              data. Unlike last time we are going to build the docker image from scratch. Start by
+              creating a new directory in <code>docker-workshop</code> called <code>snapshots</code>.
+            </p>
+            <p>
+              I've written a simple bash script to take data from one location, zip it up, and send it 
+              some where else. Download it and put it in the <code>snapshots</code> directory. This will
+              be the basis for our new docker process.
+            </p>
+          </aside>
         </section>
 
         <section>
@@ -324,16 +428,23 @@
 
             ENTRYPOINT bash /home/snapshots/entrypoint.sh
           </code></pre>
-          <pre><code data-trim>
+          <pre class="fragment"><code data-trim>
             $ docker build -t snapshots .
           </code></pre>
-        </section>
 
-        <section>
-          <h3>Let's talk about images versus containers</h3>
-          <pre><code data-trim>
-            $ docker images
-          </code></pre>
+          <aside class="notes">
+            <p>
+              A docker image is defined by the <code>Dockerfile</code>. Using a base image, some simple
+              commands to install software and create some working directories the image has all that it
+              needs for the script we downloaded.
+            </p>
+            <code>next</code>
+            <p>
+              Once everything is in place building the image is as simple as running this docker command. 
+              We would then be able to run it using <code>snapshots</code> as the image name, but we won't 
+              need to do that since I'll show you how to do the same thing using docker-compose.
+            </p>
+          </aside>
         </section>
 
         <section>
@@ -344,9 +455,7 @@
               server:
                 # ... 
               snapshot:
-                  build: ../snaphosts
-                  cpu_shares: 100
-                  mem_limit: 134217728
+                  build: ../snapshots
                   volumes:
                       - ./backup:/backup
                   volumes_from:
@@ -361,30 +470,47 @@
                       - SNAPSHOT_METHOD=local         
                       - SNAPSHOT_COMPRESSION=zip
           </code></pre>
-        </section>
 
-        <section>
-          <h3>Why you should (almost) never use the docker cli again</h3>
+          <aside class="notes">
+            <p>
+              We want to add <code>snapshots</code> to same docker-compose file we used before
+              since we will want them to run together as a unit. Do that by adding the above as
+              a new <code>service</code>. Note that the <code>build</code> option references the
+              directory where we added the <code>Dockerfile</code>. docker-compose will build this
+              image and use it for us automatically. Also notice the environment variables that
+              set the script to save the backups to the <code>/backup</code> directory. In a 
+              "production" setting we would probably want to put this on S3 or some other remote 
+              backup solution, but for this demo we'll just copy it outside docker. The script does
+              have the option to do that if you want to explore that on your own.
+            </p>
+          </aside>
         </section>
 
         <section>
           <h3>Why is it in a separate container?</h3>
-          <p>One process per container paradigm</p>
+          <p>Each container should only have one concern</p>
+          <ul>
+            <li>Containers are more reusable</li>
+            <li>Easier to scale horizontally</li>
+            <li>Protects each application</li>
+            <li>Interactions are more visibly documented</li>
+            <li>Containers are replaceable</li>
+          </ul>
+
+          <aside class="notes">
+            <p></p>
+          </aside>
         </section>
 
         <section>
-          <h3>volumes</h3>
-        </section>
-
-        <section>
-          <h3>volumes_from</h3>
+          <h3>Volumes</h3>
         </section>
 
         <section>
           <h3>Advanced: <code>docker-compose</code> config for development</h3>
         </section>
 
-        <!-- (?) Worth talking about docker-compose v2 volumes? -->
+        <!-- (?) Worth talking about docker-compose v3 volumes? -->
 
         <section>
           <h3>Step 4: Adding the map generator</h3>
