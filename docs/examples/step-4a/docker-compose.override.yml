@@ -1,0 +1,5 @@
+version: '2'
+services:
+  snapshot:
+    environment:
+      - SNAPSHOT_INTERVAL=60

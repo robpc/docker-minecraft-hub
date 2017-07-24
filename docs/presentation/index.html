@@ -208,7 +208,7 @@
             <img style="max-width: 65%" src="images/step_1_console.png"/>
           </section>
           <section>
-            <img style="max-width: 95%" src="images/step_1_game.png"/>
+            <img src="images/step_1_game.png"/>
           </section>
         </section>
 
@@ -294,17 +294,18 @@
           <!-- Try this with version 3? -->
 
           <aside class="notes">
-            <p>As you can see the settings we have here is exaclty the same as command line options
+            <p>As you can see the settings we have here are exaclty the same as command line options
             from before. The difference here is a little bit of extra information at the top.
             <code>version</code> is the version of the docker-compose file format we are using.
-            Three is actually the current version, but this tutorial was made with two. Now at the 
+            Three is actually the current version, but this tutorial was made with two. The 
+            <code>services</code> block is were we will define the containers. Now at the 
             command line we can start the server again, but this time we will be using the 
             docker-compose command.</p>
           </aside>
         </section>
 
         <section>
-          <img style="max-width: 65%" src="images/step_2_console.png"/>
+          <img src="images/step_2_console.png"/>
 
           <aside class="notes">
             Note the line about <code>Creating minecraft_hub_server_1</code>. You'll notice that
@@ -487,6 +488,17 @@
         </section>
 
         <section>
+          <h3>Volumes</h3>
+          <p><code>volumes_from</code> - Uses directories shared from another container</p>
+          <p><code>volumes</code> - Shares directories with the host machine</p>
+
+          <aside class="notes">
+            <p>
+            </p>
+          </aside>
+        </section>
+
+        <section>
           <h3>Why is it in a separate container?</h3>
           <p>Each container should only have one concern</p>
           <ul>
@@ -498,24 +510,59 @@
           </ul>
 
           <aside class="notes">
-            <p></p>
+            <p>
+
+            </p>
           </aside>
         </section>
 
         <section>
-          <h3>Volumes</h3>
+          <img src="images/step_3_console.png"/>
         </section>
 
         <section>
           <h3>Advanced: <code>docker-compose</code> config for development</h3>
+          <p>Create a <code>docker-compose.override.yml</code> in <code>minecraft-hub</code></p>
+          <pre><code data-trim>
+            version: '2'
+            services:
+              snapshot:
+                - SNAPSHOT_INTERVAL=60
+          </code></pre>
+          <pre><code data-trim>
+            $ docker-compose up
+          </code></pre>
+
+          <aside class="notes">
+            <p>
+
+            </p>
+          </aside>
+        </section>
+
+        <section>
+          <img src="images/step_3a_console.png"/>
         </section>
 
         <!-- (?) Worth talking about docker-compose v3 volumes? -->
 
         <section>
           <h3>Step 4: Adding the map generator</h3>
-          <p>Follow up to the First Rule</p>
-          <p>Probably, but that doesn't mean it can't be better</p>
+          <p>Checkout the <code>minecraft-overviewer</code> project in <code>docker-workspace</code></p>
+          <pre><code data-trim>
+            $ git clone git@github.com:robpc/minecraft-overviewer.git
+            Cloning into 'minecraft-overviewer'...
+            remote: Counting objects: 147, done.
+            remote: Compressing objects: 100% (9/9), done.
+            remote: Total 147 (delta 5), reused 11 (delta 4), pack-reused 132
+            Receiving objects: 100% (147/147), 20.04 KiB | 0 bytes/s, done.
+            Resolving deltas: 100% (56/56), done.
+          </code></pre>
+
+          <aside class="notes">
+            <p>
+            </p>
+          </aside>
         </section>
 
         <section>
@@ -536,6 +583,15 @@
                       - MINECRAFT_WORLD_DIR=/data/world
                       - MAPGEN_INTERVAL=120
           </code></pre>
+
+          <aside class="notes">
+            <p>
+            </p>
+          </aside>
+        </section>
+
+        <section>
+          <img src="images/step_4_console.png"/>
         </section>
 
         <section>
@@ -547,11 +603,73 @@
         <section>
           <h3>Container Fight: Battle of the CPU - How about resources?</h3>
           <p>docker stats</p>
-          <p>cpu_shares/mem_limit</p>
+          <pre><code data-trim>
+            $ docker stats
+            CONTAINER      CPU %   MEM USAGE / LIMIT     MEM %    NET I/O           BLOCK I/O    PIDS
+            9ea57852b557   0.00%   1008KiB / 1.952GiB    0.05%    936B / 0B         0B / 0B      3
+            882c5df7a89f   0.00%   784KiB / 1.952GiB     0.04%    10.6MB / 39.4kB   0B / 4.1kB   2
+            7da659a9ad5b   1.59%   316.3MiB / 1.952GiB   15.82%   2.13kB / 1.62kB   0B / 115kB   29
+          </code></pre>
+        </section>
+
+        <section>
+          <h3>Managing docker container resources</h3>
+          <ul>
+            <li>cpu_shares</li>
+            <li>mem_limit</li>
+          </ul>
+
+          <pre class="fragment"><code data-trim>
+            version: '2'
+            services:
+              server:
+                cpu_shares: 480
+                mem_limit: 1g
+                # ... 
+              snapshot:
+                cpu_shares: 100
+                mem_limit: 128m
+                # ...
+              mapgen:
+                cpu_shares: 300
+                mem_limit: 512m
+                # ... 
+          </code></pre>
+
+          <pre class="fragment"><code data-trim>
+            $ docker stats
+            CONTAINER      CPU %   MEM USAGE / LIMIT   MEM %    NET I/O           BLOCK I/O     PIDS
+            f828f58316c2   0.00%   1.004MiB / 128MiB   0.78%    754B / 0B         0B / 0B       3
+            b67f89c02275   0.00%   836KiB / 512MiB     0.16%    10.6MB / 53.9kB   0B / 0B       2
+            d245ea5b1aa9   0.96%   294.7MiB / 1GiB     28.78%   1.38kB / 1.2kB    0B / 94.2kB   25
+          </code></pre>
+
+          <aside class="notes">
+            <p>
+            </p>
+          </aside>
         </section>
 
         <section>
           <h3>Step 5: Adding the web server</h3>
+          <p>Checkout the <code>minecraft-hub-web</code> project in <code>docker-workspace</code></p>
+          <pre><code data-trim>
+            $ git clone git@github.com:robpc/docker-minecraft-hub-web.git minecraft-hub-web
+            Cloning into 'minecraft-hub-web'...
+            remote: Counting objects: 13, done.
+            remote: Total 13 (delta 0), reused 0 (delta 0), pack-reused 13
+            Receiving objects: 100% (13/13), 827.14 KiB | 0 bytes/s, done.
+            Resolving deltas: 100% (2/2), done.
+          </code></pre>
+
+          <aside class="notes">
+            <p>
+            </p>
+          </aside>
+        </section>
+
+        <section>
+          <h3>Let's add <code>web</code> to the project</h3>
           <pre><code data-trim>
             version: '2'
             services:
@@ -562,6 +680,8 @@
               mapgen:
                 # ..
               web:
+                cpu_shares: 100
+                mem_limit: 128m
                 build: ../minecraft-hub-web
                 ports:
                     - "80:80"
@@ -570,6 +690,21 @@
                 environment:
                     - MAP_DIR=/home/minecraft-overviewer/render/
           </code></pre>
+
+          <aside class="notes">
+            <p>
+            </p>
+          </aside>
+        </section>
+
+        <section>
+          <img src="images/step_5_browser.png"/>
+
+          <aside class="notes">
+            <p>
+              [show it, walk around and then show the updated map]
+            </p>
+          </aside>
         </section>
 
         <section>
@@ -577,21 +712,38 @@
         </section>
 
         <section>
-          <h3>Separating Frontend and Backend Development</h3>
-        </section>
-
-        <section>
           <h3>Where can we go from here?</h3>
+          <section>
+            <h5>Separating Frontend and Backend Development</h5>
+          </section>
           <section>
             <p>Uploading to a repository</p>
           </section>
           <section>
-            <p>docker-compose in github</p>
+            <p>ECS</p>
           </section>
         </section>
 
         <section>
           <h3>Full Project in Github</h3>
+          <table>
+            <tr>
+              <td><small>minecraft-hub</small></td>
+              <td><small><a href="https://github.com/robpc/docker-minecraft-hub">https://github.com/robpc/docker-minecraft-hub</a></small></td>
+            </tr>
+            <tr>
+              <td><small>snapshots</small></td>
+              <td><small><a href="https://github.com/robpc/docker-snapshots">https://github.com/robpc/docker-snapshots</a></small></td>
+            </tr>
+            <tr>
+              <td><small>minecraft-overviewer</small></td>
+              <td><small><a href="https://github.com/robpc/minecraft-overviewer">https://github.com/robpc/minecraft-overviewer</a></small></td>
+            </tr>
+            <tr>
+              <td><small>minecraft-hub-web</small></td>
+              <td><small><a href="https://github.com/robpc/docker-minecraft-hub-web">https://github.com/robpc/docker-minecraft-hub-web</a></small></td>
+            </tr>
+          </table>
         </section>
 
       </div>
@@ -605,6 +757,19 @@
       // - https://github.com/hakimel/reveal.js#configuration
       // - https://github.com/hakimel/reveal.js#dependencies
       Reveal.initialize({
+
+        // // Parallax background image
+        // parallaxBackgroundImage: 'images/background.png', // e.g. "https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg"
+
+        // // Parallax background size
+        // parallaxBackgroundSize: '2116px 928px', // CSS syntax, e.g. "2100px 900px" - currently only pixels are supported (don't use % or auto)
+
+        // // Number of pixels to move the parallax background per slide
+        // // - Calculated automatically unless specified
+        // // - Set to 0 to disable movement along an axis
+        // parallaxBackgroundHorizontal: 200,
+        // parallaxBackgroundVertical: 50,
+
         dependencies: [
           { src: 'plugin/markdown/marked.js' },
           { src: 'plugin/markdown/markdown.js' },
