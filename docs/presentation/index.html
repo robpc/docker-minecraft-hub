@@ -107,7 +107,7 @@
           <div class="fragment">
             <ul>
               <li>Explains using volumes with multiple containers</li>
-              <li>Demonstrates one proccess per container</li>
+              <li>Demonstrates one proccess per container concept</li>
               <li>Uses a "real world" example with Minecraft</li>
             </ul>
           </div>
@@ -198,7 +198,12 @@
             </p>
             <code>next</code>
             <p>
-              Use this command to run the docker container using the image we just picked.
+              Use this command to run the docker container using the image we just picked. The command
+              line arguments here do three things. One, we set two environment variables for the
+              application inside the container. Two we expose the port that minecraft uses to the 
+              host machine. Note that there are two values here allowing us to map the hosted port
+              differently than what the application is inside the container. And the last option
+              specifies a tag for an existing docker image to run in the container.
             </p>
           </aside>
         </section>
@@ -478,40 +483,126 @@
               since we will want them to run together as a unit. Do that by adding the above as
               a new <code>service</code>. Note that the <code>build</code> option references the
               directory where we added the <code>Dockerfile</code>. docker-compose will build this
-              image and use it for us automatically. Also notice the environment variables that
-              set the script to save the backups to the <code>/backup</code> directory. In a 
-              "production" setting we would probably want to put this on S3 or some other remote 
-              backup solution, but for this demo we'll just copy it outside docker. The script does
-              have the option to do that if you want to explore that on your own.
+              image and use it for us automatically.
             </p>
           </aside>
         </section>
 
         <section>
-          <h3>Volumes</h3>
-          <p><code>volumes_from</code> - Uses directories shared from another container</p>
-          <p><code>volumes</code> - Shares directories with the host machine</p>
+          <h3>Shared Data</h3>
+          <aside class="notes">
+            <p>
+              The snapshot example shows us two ways to share data in the containers, so lets take a
+              look at each.
+            </p>
+          </aside>
+        </section>
+        <section>
+          <p><code>volumes_from</code></p>
+          <p>Uses directories shared from another container</p>
+          <div>
+            <small>minecraft-server (<a href="https://github.com/itzg/dockerfiles/blob/master/minecraft-server/Dockerfile#L39">Dockerfile</a>)</small>
+            <pre><code data-trim>
+              VOLUME ["/data","/mods","/config","/plugins","/home/minecraft"]
+            </code></pre>
+          </div>
+          <div>
+            <small>docker-compose</small>
+            <pre><code data-trim>
+              version: '2'
+                services:
+                  snapshot:
+                    # ...
+                    volumes_from:
+                      - server
+                    environment:
+                      # ...
+                      - SNAPSHOT_LOCATION=/data
+            </code></pre>
+          </div>
 
           <aside class="notes">
             <p>
+              In the first example, we use <code>volumes_from</code> to share
+              directories between different containers. If you looked at the 
+              minecraft-server Dockerfile, the <code>VOLUME</code> command 
+              exposes these directories including the <code>/data</code>
+              one which has the world data we are interested in.
             </p>
+          </aside>
+        </section>
+        <section>
+          <p><code>volumes</code></p>
+          <p>Shares directories with the host machine</p>
+          <pre><code data-trim>
+            version: '2'
+            services:
+              snapshot:
+                # ...
+                volumes:
+                  - ./backup:/backup
+                environment:
+                  # ...
+                  - SNAPSHOT_DESTINATION=/backup
+          </code></pre>
+
+          <aside class="notes">
+            The second example uses the <code>volumes</code> option to share a directory with the
+            host machine. This links the location on the host machine in the first part to the location
+            in the container in the second part. The environment variable tells the 
+            script to save the backups to the <code>/backup</code> directory. In a 
+            "production" setting we would probably want to put this on S3 or some other remote 
+            backup solution to make this setup a little more disposable, but for this demo 
+            we'll just copy it to the host machine. The script does have the option to send to S3
+            if you want to explore that on your own.
           </aside>
         </section>
 
         <section>
           <h3>Why is it in a separate container?</h3>
           <p>Each container should only have one concern</p>
-          <ul>
+          <ul class="fragment">
             <li>Containers are more reusable</li>
-            <li>Easier to scale horizontally</li>
             <li>Protects each application</li>
-            <li>Interactions are more visibly documented</li>
+            <li>Integrations are more visibly documented</li>
             <li>Containers are replaceable</li>
           </ul>
 
           <aside class="notes">
             <p>
-
+              "Each contaimer should only have one concern" is one of the best practices listed in the 
+              docker documentation. Originally this concept was "one process per container" but it was
+              changed to avoid confusion with applications like apache that are multi-threaded. Both 
+              can be a little confusing in my opinion, but the idea is that each container should ideally
+              only have one function. 
+            </p>
+            <code>next</code>
+            <p>
+              There are a few reasons why this is a good idea.
+              <ul>
+                <li>
+                  Keeping individual functions separated makes it easier to reuse those functions. The snapshot
+                  tool used in this workshop for example is not specific to minecraft and could be used in another
+                  project. This also makes them easier to test and maintain. The concept is similar to the way that
+                  GNU tools work in Linux.
+                </li>
+                <li>
+                  Separate containers also protect against dependency conflicts and security concerns. An example of
+                  the former might be having two separate python applications that have different and mutually 
+                  exclusive requirements.
+                </li>
+                <li>
+                  Since interations between containers need to be allowed specifically, this weeds
+                  out any undocumented interations. It is much easier to see at a glance how different applications
+                  interact when they are defined at the container level instead of burried in less obvious scripts 
+                  inside the container.
+                </li>
+                <li>
+                  When functions are defined at the container level, it is easier to swap them out with different
+                  implementations. An example of this could be statsd collector that could be changed when the
+                  metrics service changes.
+                </li>
+              </ul>
             </p>
           </aside>
         </section>
@@ -521,7 +612,7 @@
         </section>
 
         <section>
-          <h3>Advanced: <code>docker-compose</code> config for development</h3>
+          <h3>Bonus: <code>docker-compose</code> config for development</h3>
           <p>Create a <code>docker-compose.override.yml</code> in <code>minecraft-hub</code></p>
           <pre><code data-trim>
             version: '2'
@@ -535,7 +626,12 @@
 
           <aside class="notes">
             <p>
-
+              A way to easily separate local development configuration from a production config is by 
+              using a <code>docker-compose.override.yml</code> file that is automatically used by 
+              docker-compose to augment those in <code>docker-compose.yml</code>. As a bonus, some tools 
+              like those for AWS ECS will ignore the override making it perfect for development. In this
+              example we changed the interval between snapshots to one minute instead of the fifteen it
+              was before to make it faster to test.
             </p>
           </aside>
         </section>
@@ -561,6 +657,10 @@
 
           <aside class="notes">
             <p>
+              In the root of our workshop directory lets clone a tool that will make a Google-style map 
+              of our randomly generated minecraft world. We are pulling a fork I made with some minor
+              changes, but this is a tool with an open source community and my fork is of a repo that 
+              dockerizes the application. 
             </p>
           </aside>
         </section>
@@ -575,29 +675,26 @@
               snapshot:
                 # ...
               mapgen:
-                  build: ../minecraft-overviewer
-                  volumes_from:
-                      - server
-                  environment:
-                      - MINECRAFT_VERSION=1.12
-                      - MINECRAFT_WORLD_DIR=/data/world
-                      - MAPGEN_INTERVAL=120
+                build: ../minecraft-overviewer
+                volumes_from:
+                  - server
+                environment:
+                  - MINECRAFT_VERSION=1.12
+                  - MINECRAFT_WORLD_DIR=/data/world
+                  - MAPGEN_INTERVAL=120
           </code></pre>
 
           <aside class="notes">
             <p>
+              Back in the <code>docker-compose.yml</code> in our minecraft-hub folder, the config 
+              needed to add this application is pretty similar to what we've already done. You'll 
+              notice that once again we are using <code>volumes_from</code> to get the world data.
             </p>
           </aside>
         </section>
 
         <section>
           <img src="images/step_4_console.png"/>
-        </section>
-
-        <section>
-          <h3>Advanced: Keeping sensitive information out of your build</h3>
-          <p>env_file</p>
-          <p>Downloading from s3</p>
         </section>
 
         <section>
@@ -610,6 +707,14 @@
             882c5df7a89f   0.00%   784KiB / 1.952GiB     0.04%    10.6MB / 39.4kB   0B / 4.1kB   2
             7da659a9ad5b   1.59%   316.3MiB / 1.952GiB   15.82%   2.13kB / 1.62kB   0B / 115kB   29
           </code></pre>
+
+          <aside class="notes">
+            Now that we have a few containers running lets take a look at the resource allocation for these
+            containers using docker's stats command. Not all containers are created equal, but by default 
+            docker will split them evenly. Without more information that seems reasonable enough, but in our 
+            project the snapshot container getting 2gb is probably overkill. Luckily, docker gives us a couple
+            options to control these allocations.
+          </aside>
         </section>
 
         <section>
@@ -623,7 +728,7 @@
             version: '2'
             services:
               server:
-                cpu_shares: 480
+                cpu_shares: 1024
                 mem_limit: 1g
                 # ... 
               snapshot:
@@ -631,12 +736,24 @@
                 mem_limit: 128m
                 # ...
               mapgen:
-                cpu_shares: 300
+                cpu_shares: 1024
                 mem_limit: 512m
                 # ... 
           </code></pre>
 
-          <pre class="fragment"><code data-trim>
+          <aside class="notes">
+            <p>
+              These two options, unsurprisingly will control the CPU and memory allocation of the containers.
+              There are more options than these, including things like ulimit, but this is a good start. The 
+              cpu_shares is perhaps a bit odd setting in that 1024 represents a single core. In my experience
+              it is something that you have to feel out by running your application and adjusting as needed.
+              The mem_limit on the other hand is a bit more straight-forward.
+            </p>
+          </aside>
+        </section>
+
+        <section>
+          <pre><code data-trim>
             $ docker stats
             CONTAINER      CPU %   MEM USAGE / LIMIT   MEM %    NET I/O           BLOCK I/O     PIDS
             f828f58316c2   0.00%   1.004MiB / 128MiB   0.78%    754B / 0B         0B / 0B       3
@@ -646,8 +763,37 @@
 
           <aside class="notes">
             <p>
+              Running the project again, we can see our changes in action.
             </p>
           </aside>
+        </section>
+
+
+        <section>
+          <h3>Bonus: Keeping sensitive information out of your build</h3>
+        </section>
+
+        <section>
+          <h3>Locally or in development</h3>
+          <p>Using an <code>env_file</code></p>
+          <p>
+            <pre><code data-trim>
+              version: '2'
+              services:
+                mapgen:
+                  env_file: config.env
+            </code></pre>
+
+            <small>config.env</small>
+            <pre><code data-trim>
+              GOOGLE_API_KEY=key
+            </code></pre>
+          </p>
+        </section>
+
+        <section>
+          <h3>In Production</h3>
+          <p>Downloading file from s3 and using bash <code>source</code></p>
         </section>
 
         <section>
@@ -664,6 +810,10 @@
 
           <aside class="notes">
             <p>
+              Now lets add the final piece of our project: a web server to host the map and provide 
+              a landing page for our server. Taking a look at the project you can see that it is just
+              a simple nginx server with some static web content, but this could easily be a react or
+              other frontend application hosted in nginx.
             </p>
           </aside>
         </section>
@@ -693,6 +843,9 @@
 
           <aside class="notes">
             <p>
+              Again we add this application to the <code>docker-compose</code> inside the minecraft-hub directory
+              and set the appropriate options. Note that this time we are using <code>volumes_from</code> the mapgen 
+              because we want to host the generated map files.
             </p>
           </aside>
         </section>
@@ -713,15 +866,11 @@
 
         <section>
           <h3>Where can we go from here?</h3>
-          <section>
-            <h5>Separating Frontend and Backend Development</h5>
-          </section>
-          <section>
-            <p>Uploading to a repository</p>
-          </section>
-          <section>
-            <p>ECS</p>
-          </section>
+          <ul>
+            <li>Uploading to a repository</li>
+            <li>Separating Frontend and Backend Development</li>
+            <li>ECS</li>
+          </ul>
         </section>
 
         <section>
@@ -759,16 +908,16 @@
       Reveal.initialize({
 
         // // Parallax background image
-        // parallaxBackgroundImage: 'images/background.png', // e.g. "https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg"
+        parallaxBackgroundImage: 'images/background.png', // e.g. "https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg"
 
         // // Parallax background size
-        // parallaxBackgroundSize: '2116px 928px', // CSS syntax, e.g. "2100px 900px" - currently only pixels are supported (don't use % or auto)
+        parallaxBackgroundSize: '2800px 1440px', // CSS syntax, e.g. "2100px 900px" - currently only pixels are supported (don't use % or auto)
 
         // // Number of pixels to move the parallax background per slide
         // // - Calculated automatically unless specified
         // // - Set to 0 to disable movement along an axis
-        // parallaxBackgroundHorizontal: 200,
-        // parallaxBackgroundVertical: 50,
+        parallaxBackgroundHorizontal: 30,
+        parallaxBackgroundVertical: 50,
 
         dependencies: [
           { src: 'plugin/markdown/marked.js' },
