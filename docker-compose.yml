@@ -21,7 +21,7 @@ services:
     snapshot:
         image: quay.io/rpcann/snapshots
         cpu_shares: 100
-        mem_limit: 134217728
+        mem_limit: 128m
         volumes:
             - ./backup:/backup
         volumes_from:
@@ -40,7 +40,7 @@ services:
     mapgen:
         image: quay.io/rpcann/minecraft-overviewer
         cpu_shares: 300
-        mem_limit: 536870912
+        mem_limit: 512m
         volumes_from:
             - server
         environment:
@@ -53,7 +53,7 @@ services:
     web:
         image: quay.io/rpcann/minecraft-hub-web
         cpu_shares: 100
-        mem_limit: 134217728
+        mem_limit: 128m
         ports:
             - "80:80"
         volumes_from:
