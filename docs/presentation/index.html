@@ -220,21 +220,21 @@
         <section>
           <h3>Managing running containers</h3>
           
-          <p>list</p>
-          <pre><code data-trim>
+          <h5><code>list</code></h5>
+          <pre><code class="nohighlight" data-trim>
             $ docker ps
             CONTAINER ID   IMAGE                   COMMAND    CREATED          STATUS                    PORTS                                 NAMES
             82d8695c6efa   itzg/minecraft-server   "/start"   17 minutes ago   Up 17 minutes (healthy)   0.0.0.0:25565->25565/tcp, 25575/tcp   modest_hermann
           </code></pre>
 
-          <p>stop</p>
-          <pre><code data-trim>
+          <h5><code>stop</code></h5>
+          <pre><code class="nohighlight" data-trim>
             $ docker stop 82d8695c6efa
             82d8695c6efa
           </code></pre>
 
-          <p>delete</p>
-          <pre><code data-trim>
+          <h5><code>delete</code></h5>
+          <pre><code class="nohighlight" data-trim>
             $ docker rm 82d8695c6efa
             82d8695c6efa
           </code></pre>
@@ -255,7 +255,7 @@
           <h3>docker-compose</h3>
           <p>Use YAML configuration files to manage docker containers</p>
           <div  class="fragment">
-            <pre><code data-trim>
+            <pre><code class="nohighlight" data-trim>
               $ docker-compose up 
               $ docker-compose down
               $ docker-compose rm
@@ -292,7 +292,7 @@
                   - EULA=TRUE
                   - VERSION=1.12
           </code></pre>
-          <pre><code data-trim>
+          <pre><code class="nohighlight" data-trim>
             $ docker-compose up
           </code></pre>
 
@@ -357,12 +357,12 @@
 
         <section>
           <h3>Let's talk about images versus containers</h3>
-          <pre class="fragment"><code data-trim>
+          <pre class="fragment"><code class="nohighlight" data-trim>
             $ docker images
             REPOSITORY              TAG      IMAGE ID       CREATED      SIZE
             itzg/minecraft-server   latest   ca3942297ef6   6 days ago   293MB
           </code></pre>
-          <pre class="fragment"><code data-trim>
+          <pre class="fragment"><code class="nohighlight" data-trim>
             $ docker ps -a
             CONTAINER ID   IMAGE                   COMMAND    CREATED          STATUS                        
             11d87def7e5b   itzg/minecraft-server   "/start"   38 minutes ago   Exited (137) 38 seconds ago  
@@ -434,7 +434,7 @@
 
             ENTRYPOINT bash /home/snapshots/entrypoint.sh
           </code></pre>
-          <pre class="fragment"><code data-trim>
+          <pre class="fragment"><code class="nohighlight" data-trim>
             $ docker build -t snapshots .
           </code></pre>
 
@@ -461,20 +461,20 @@
               server:
                 # ... 
               snapshot:
-                  build: ../snapshots
-                  volumes:
-                      - ./backup:/backup
-                  volumes_from:
-                      - server
-                  environment:
-                      - SNAPSHOT_NAME=minecraft-backup
-                      - SNAPSHOT_TIMESTAMP_FORMAT=%Y%m%d-%H%M%S
-                      - SNAPSHOT_INTERVAL=3600
-                      - SNAPSHOT_MAX_NUM=3
-                      - SNAPSHOT_LOCATION=/data
-                      - SNAPSHOT_DESTINATION=/backup
-                      - SNAPSHOT_METHOD=local         
-                      - SNAPSHOT_COMPRESSION=zip
+                build: ../snapshots
+                volumes:
+                  - ./backup:/backup
+                volumes_from:
+                  - server
+                environment:
+                  - SNAPSHOT_NAME=minecraft-backup
+                  - SNAPSHOT_TIMESTAMP_FORMAT=%Y%m%d-%H%M%S
+                  - SNAPSHOT_INTERVAL=3600
+                  - SNAPSHOT_MAX_NUM=3
+                  - SNAPSHOT_LOCATION=/data
+                  - SNAPSHOT_DESTINATION=/backup
+                  - SNAPSHOT_METHOD=local         
+                  - SNAPSHOT_COMPRESSION=zip
           </code></pre>
 
           <aside class="notes">
@@ -620,7 +620,7 @@
               snapshot:
                 - SNAPSHOT_INTERVAL=60
           </code></pre>
-          <pre><code data-trim>
+          <pre><code class="nohighlight" data-trim>
             $ docker-compose up
           </code></pre>
 
@@ -645,7 +645,7 @@
         <section>
           <h3>Step 4: Adding the map generator</h3>
           <p>Checkout the <code>minecraft-overviewer</code> project in <code>docker-workspace</code></p>
-          <pre><code data-trim>
+          <pre><code class="nohighlight" data-trim>
             $ git clone git@github.com:robpc/minecraft-overviewer.git
             Cloning into 'minecraft-overviewer'...
             remote: Counting objects: 147, done.
@@ -700,7 +700,7 @@
         <section>
           <h3>Container Fight: Battle of the CPU - How about resources?</h3>
           <p>docker stats</p>
-          <pre><code data-trim>
+          <pre><code class="nohighlight" data-trim>
             $ docker stats
             CONTAINER      CPU %   MEM USAGE / LIMIT     MEM %    NET I/O           BLOCK I/O    PIDS
             9ea57852b557   0.00%   1008KiB / 1.952GiB    0.05%    936B / 0B         0B / 0B      3
@@ -720,8 +720,8 @@
         <section>
           <h3>Managing docker container resources</h3>
           <ul>
-            <li>cpu_shares</li>
-            <li>mem_limit</li>
+            <li><code>cpu_shares</code></li>
+            <li><code>mem_limit</code></li>
           </ul>
 
           <pre class="fragment"><code data-trim>
@@ -753,7 +753,7 @@
         </section>
 
         <section>
-          <pre><code data-trim>
+          <pre><code class="nohighlight" data-trim>
             $ docker stats
             CONTAINER      CPU %   MEM USAGE / LIMIT   MEM %    NET I/O           BLOCK I/O     PIDS
             f828f58316c2   0.00%   1.004MiB / 128MiB   0.78%    754B / 0B         0B / 0B       3
@@ -799,7 +799,7 @@
         <section>
           <h3>Step 5: Adding the web server</h3>
           <p>Checkout the <code>minecraft-hub-web</code> project in <code>docker-workspace</code></p>
-          <pre><code data-trim>
+          <pre><code class="nohighlight" data-trim>
             $ git clone git@github.com:robpc/docker-minecraft-hub-web.git minecraft-hub-web
             Cloning into 'minecraft-hub-web'...
             remote: Counting objects: 13, done.
@@ -834,11 +834,11 @@
                 mem_limit: 128m
                 build: ../minecraft-hub-web
                 ports:
-                    - "80:80"
+                  - "80:80"
                 volumes_from:
-                    - mapgen
+                  - mapgen
                 environment:
-                    - MAP_DIR=/home/minecraft-overviewer/render/
+                  - MAP_DIR=/home/minecraft-overviewer/render/
           </code></pre>
 
           <aside class="notes">
