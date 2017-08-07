@@ -170,7 +170,7 @@
 
         <section>
           <h3>Workshop Cheatsheet</h3>
-          <p><a href="http://bit.ly/robpc-docker-workshop">http://bit.ly/robpc-docker-workshop</a>
+          <p><small><a href="https://github.com/robpc/docker-minecraft-hub/blob/master/docs/README.md">https://github.com/robpc/docker-minecraft-hub/blob/master/docs/README.md</small></a>
         </section>
 
         <section>
@@ -338,12 +338,14 @@
             <code>next</code>
             <p>
               Here are just a few examples.
+            </p>
               <ul>
                 <li>Pointing between a production database and the development one</li>
                 <li>Enabling extra debugging when developing</li>
                 <li>Disabling the cache when running locally</li>
               </ul>
-              These are just a few examples, but the part I wand to emphasize is that it is
+            <p>
+              These are just a few examples, but the part I want to emphasize is that it is
               useful to be able to setup the differences in the different environments your
               application runs in runtime environment variables. This allows you to run the 
               same image in all your environments. The difference between production and
@@ -906,6 +908,7 @@
       // - https://github.com/hakimel/reveal.js#configuration
       // - https://github.com/hakimel/reveal.js#dependencies
       Reveal.initialize({
+        // showNotes: "separate-page",
 
         // // Parallax background image
         parallaxBackgroundImage: 'images/background-grey3.png', // e.g. "https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg"
